@@ -1,0 +1,24 @@
+#!/bin/bash
+
+npm run build
+
+failure=flase
+
+ssh ubuntu@devlab.io "rm -rf /var/www/html/bar/*"
+if [ $? -eq 0 ]; then
+  echo "Successfully removed old files"
+else
+  echo "Failed to remove old files"
+fi
+
+scp -r ./dist/* ubuntu@devlab.io:/var/www/html/bar
+if [ $? -eq 0 ]; then
+  echo "Successfully uploaded new files"
+else
+  echo "Failed to upload new files"
+  failure=true
+fi
+
+if [ $failure = true ]; then
+  exit 1
+fi
