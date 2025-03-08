@@ -1,9 +1,21 @@
 import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
 
 
 
+// first check to see if the browser supports service workers
+if ('serviceWorker' in navigator) {
+  // when the window loads, register the service worker
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/serviceworker.js')
+      .then(registration => {
+        console.log('Service Worker registered: ', registration);
+      })
+      .catch(registrationError => {
+        console.log('Service Worker registration failed: ', registrationError);
+      });
+  });
+}
+/*
 const div_worker =  document.querySelector("#test-worker")
 if (window.Worker) {
   const worker = new Worker(new URL('/src/scripts/plant_data_webworker.js', import.meta.url))
@@ -26,6 +38,9 @@ if (window.Worker) {
   worker.postMessage('Hello from the main thread!')
 }
 document.querySelector('#app').innerHTML = `<div>Testing...</div>`;
+*/
+
+
 /*
 document.querySelector('#app').innerHTML = `
   <div>
