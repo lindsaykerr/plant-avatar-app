@@ -5,11 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/paac.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
+   
     <title>Vite App</title>
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-    <div id="test-worker"></div>
+    <button id="notify" onclick='notify()'>Notify me</button>
+    <script>
+      function notify() {
+        if ("Notification" in window) {
+          Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+              new Notification("");
+            }
+          });
+        }
+      }
+    </script>
+    <div id="test-worker"></div> 
+    <script type="module" src="/src/main.js" defer></script>
   </body>
 </html>
