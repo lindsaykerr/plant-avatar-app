@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/paac.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-   
+    <script type="module" src="/src/scripts/inti-service-worker.js"></script>
     <title>Vite App</title>
   </head>
   <body>
@@ -16,7 +16,9 @@
         if ("Notification" in window) {
           Notification.requestPermission().then((permission) => {
             if (permission === "granted") {
-              new Notification("");
+              new Notification("Granted", {
+                body: "You will be notified",
+              });
             }
           });
         }

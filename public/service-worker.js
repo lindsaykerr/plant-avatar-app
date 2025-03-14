@@ -4,10 +4,58 @@ const addResoucesToCache = async (resources) => {
     await cache.addAll(resources);
 };
 
+const showNotification = (data) => {
+    self.registration.showNotification("Data Updated!", {
+        body: data.message || "New data available.",
+        icon: "/images/notification-icon.png"
+    });
+}
+
+const SERVER_PATH = {
+    LOCALTESTING : "http://localhost:7070/api/v1/data/1/latest",
+    TESTING : "http://192.168.0.26:7070/api/v1/data/1/latest",
+}; 
+
+const myStorage = {
+    data: {},
+    needsSync: false,
+}
+
+
+
+async function  queryServer () {
+
+
+    fetch(SERVER_PATH.LOCALTESTING)
+    .then((response) => {
+        if (!response.ok) {
+            console.log("Response form server: ", response);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then((data) => {
+
+
+        if (myStorage.data["recorded_at"] !== data["recorded_at"]) {
+           showNotification(data);
+
+            myStorage.data = data;
+        }
+        
+    })
+    .catch((error) => {
+        console.error("Error fetching data: ", error);
+    });
+}
 
 let stored_data;
 
 const getLastData = async () => {
+
+    return localStorage.data;
+
+    /*
     console.log("Service worker: Fetching last data...");
     const db = indexedDB.open("appdb", 3);
     db.onsuccess = (event) => {
@@ -27,13 +75,14 @@ const getLastData = async () => {
         request.onerror = (event) => {
             console.error("Error fetching data: ", event.target.error);
         }
-    }
+    }*/
 }
 
 const storeData = async (data) => {
     console.log("Service Worker: Storing data...");
     const db = indexedDB.open("appdb", 3);
     db.onsuccess = (event) => {
+        console.log("something has changed")
         const database = event.target.result;
         const transaction = database.transaction("plant", "readwrite");
         const store = transaction.objectStore("plant");
@@ -58,8 +107,18 @@ const storeData = async (data) => {
     };
 }
 
-
-
+// Listen for sync events
+self.addEventListener("sync", (event) => {
+    if (event.tag === "syncNotifications") {
+        myStorage.needsSync = true;
+        event.waitUntil(() => {
+            if (myStorage.needsSync) {
+                showNotification(myStorage.data);
+                myStorage.needsSync = false;
+            }
+        });
+    }
+});
 
 
 self.addEventListener("install", (event) => {
@@ -69,34 +128,18 @@ self.addEventListener("install", (event) => {
     setInterval(() => {
         //self.registration.showNotification("Checking for data update...");
     }, 9000);
-*/
-setInterval(() => {
-    console.log("Service worker: Checking for data update...");
-    fetch("http://192.168.0.26:7070/api/v1/data/1/latest")
-    .then((response) => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then((data) => {
-        getLastData();
-        if (stored_data["recorded_at"] !== data["recorded_at"]) {
-            self.registration.showNotification("Data Updated!", {
-                body: data.message || "New data available.",
-                icon: "/images/notification-icon.png"
-            });
-        }
-        storeData(data);
-    })
-    .catch((error) => {
-        console.error("Error fetching data: ", error);
-    });
-}
-, 9000); // 2 minutes
+*/  console.log("Service worker: Checking for data update...");
+    setInterval(() => {
+    
+        queryServer()
+    }
+    , 9000); // 2 minutes
 });
 
 self.addEventListener("activate", (event) => {
+    setInterval(() => {
+        queryServer()
+    }, 9000);
 
 });
 

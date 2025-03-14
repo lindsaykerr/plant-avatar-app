@@ -1,14 +1,7 @@
-(function(){
-    // App startup
-
-    // Set up the database
-    const dbSettings = {
-        name: 'appdb',
-        version: 3,
-    };
-    let db = indexedDB.open(dbSettings.name, dbSettings.version);
+    /*
+    indexedDB.open(dbSettings.name, dbSettings.version);
     db.onsuccess = (event) => {
-        console.log('Database opened successfully');
+        console.log'Database opened successfully');
         
         const db2 = event.target.result;
         const transaction = db2.transaction('plant_data', 'readwrite');
@@ -54,12 +47,13 @@
         objectStore.createIndex('reading', 'reading', { unique: false });
         objectStore.createIndex('recorded_at', 'recorded_at', { unique: false });
         objectStore.createIndex('species', 'species', { unique: false });
-        */
+    
         
  
-    };
+    };*/
+
+
   
-})();
 
 
 function deleteDatabase() {
@@ -78,32 +72,6 @@ function deleteDatabase() {
 
 //deleteDatabase();
 
-const registerServiceWorker = async () => {
-    if (!('serviceWorker' in navigator)) {
-        console.log('Service Worker not supported');
-        return;
-    }
-    try {
-        
-        const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
-
-        if (registration.installing) {
-            console.log('Service worker installing');
-        }
-        else if (registration.waiting) {
-            console.log('Service worker installed');
-        }
-        else if (registration.active) {
-            console.log('Service worker active');
-        }
-    }
-    catch (error) {
-        console.error('Service Worker registration failed:', error);
-    }
-} 
-
-registerServiceWorker();
-
 const showCachedData = async () => {
     const cache = await caches.open('v1');
     cache.keys().then((keys) => {
@@ -113,8 +81,6 @@ const showCachedData = async () => {
         });
     });
 }
-
-showCachedData();
 
 // app settings 
 const settings = {
