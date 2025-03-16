@@ -10,7 +10,7 @@
         * send an initial message so that it can transfer the communication port, essentaially giving 
         * the service worker a connection port 2 to allow for communication.
         */
-        navigator.serviceWorker.controller.postMessage({type: "connect", payload: "success"},[channel.port2]);  
+        navigator.serviceWorker.controller.postMessage({type: "connect", payload: "success", port: channel.port2},[channel.port2]);  
     });
     
     /*

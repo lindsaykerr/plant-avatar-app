@@ -1,40 +1,26 @@
-const registerServiceWorker = async () => {
+
+
+
+const channel = new MessageChannel();
+
+async function registerServiceWorker() {
+   
     if (!('serviceWorker' in navigator)) {
         console.log('Service Worker not supported');
-        return;
+        return 
     }
-
-    // Registering the service worker
-    try {
-        
-        const registration = await navigator.serviceWorker.register('service-worker.js', { scope: '/' });
-        // Then later, request a one-off sync:
-
-        if (registration.installing) {
-            
-            console.log('SW Registration: Installing');
-        }
-        else if (registration.waiting) {
-              
-
-            console.log('SW Registration: Installed');
-        }
-        else if (registration.active) {
-            // send a message to the service worker
-            
-            const data = localStorage.getItem('plants_data');
-            if (data) {
-                registration.active.postMessage({ data: JSON.parse(data) });
-            }
-            console.log('SW Registration: Active');
-        }
     
-        return navigator.serviceWorker.ready;
+    navigator.serviceWorker.register('service-worker.js', { scope: '/' }).then((registration) => {
+        console.log('Service Worker registered: ');
+        return true;
+    
+    }).catch((registrationError) => {
+        
+        console.log('Service Worker registration failed: ', registrationError);
+        return false;
+      
+    });
 
-    }
-    catch (error) {
-        console.error('SW Registration failure: ', error);
-    }
 } 
 
 async function syncNotifications() {
@@ -50,13 +36,36 @@ window.addEventListener('load', e => {
         localStorage.setItem('plants_data', JSON.stringify([]));
     }
     if (registerServiceWorker()) {
-        console.log("SW Registration: Complete");
-        navigator.serviceWorker.onmessage = function(event) {
-            console.log("Service Worker: Message received from service worker");
-            const data = JSON.parse(event.data);
-            console.log(data);
-        }
+        console.log("Client: Service Worker registered");
+        
+        syncNotifications();
     } 
-    syncNotifications();
+    
 
 });
+
+    
+  /* // check first if the service worker is ready to receive messages
+navigator.serviceWorker.ready.then((registration) => {
+  
+    * send an initial message so that it can transfer the communication port, essentaially giving 
+    * the service worker a connection port 2 to allow for communication.
+  
+    
+});  */
+
+/*
+    (client) p1 <----> p2 (service worker)
+*/ 
+
+// listen for incoming messages on port 1 
+
+
+
+channel.port1.onmessage = (event) => {
+    console.log("Client: Request recieve for 'is view active'");
+    if (event.data.type === "is view active") {
+        
+        channel.port2.postMessage({type: "view is active", payload: "success"});
+    }
+};

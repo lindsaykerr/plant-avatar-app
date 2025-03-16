@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/paac.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    <script type="module" src="/src/scripts/inti-service-worker.js"></script>
+    
     <title>Vite App</title>
   </head>
   <body>
@@ -25,8 +25,27 @@
       }
     </script>
     <div id="test-worker"></div> 
+    <script type="module" src="/src/scripts/inti-service-worker.js"></script>
+    <script type="module" src="/src/main.js"></script>   
+    <script type="module" defer>
+      if ("serviceWorker" in navigator) {
+        const result = navigator.serviceWorker.ready;
+        result.then((registration) => {    
+          const channel = new MessageChannel();
+          registration.active.postMessage({type: "connect", port: channel.port2}, [channel.port2]);
 
-    <script type="module" src="/src/main.js"></script>    
-    <script type="module" src="/src/scripts/clients-sw-api.js"></script>
+          channel.port1.onmessage = (event) => {
+           
+            if (event.data.type === "is view active") { 
+              console.log("Sending view is active ");
+              registration.active.postMessage({type: "view is active", view: true});
+            }
+          };
+        
+    
+        });
+      }
+    </script> 
+
   </body>
 </html>

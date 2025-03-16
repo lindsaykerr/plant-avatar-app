@@ -69,6 +69,9 @@ self.addEventListener('message', (event) => {
     if (event.data.type === "connect") {
         console.log("Service worker: Port connected");
         port = event.ports[0];    
+
+        console.log("Port: ", port);
+        isViewActive();
     }
         
 });
