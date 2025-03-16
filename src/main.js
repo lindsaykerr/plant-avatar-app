@@ -93,4 +93,4 @@ const setAppSettings = async () => {
     const settingsResponse = new Response(JSON.stringify(settings));
     appcache.put(new Request('/settings'), settingsResponse);
 }
-const appcache = await caches.open('app_settings');
+const appcache = caches.open('app_settings');

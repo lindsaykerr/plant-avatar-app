@@ -1,9 +1,25 @@
 
+importScripts('data-server.js');
+importScripts('efs.js');
+
+/*** STORAGE, VARIABLES and CACHING ***/
+console.log("Service worker: Starting...NOW");
+// temp storage object for the service worker
+const storageSW = {
+    data: {},
+    needsSync: false,
+}
+
+let port;
+
 const addResoucesToCache = async (resources) => {
     const cache = await caches.open("v1");
     await cache.addAll(resources);
 };
 
+
+
+// this is only a placeholder for now
 const showNotification = (data) => {
     self.registration.showNotification("Data Updated!", {
         body: data.message || "New data available.",
@@ -11,110 +27,61 @@ const showNotification = (data) => {
     });
 }
 
-const SERVER_PATH = {
-    LOCALTESTING : "http://localhost:7070/api/v1/data/1/latest",
-    TESTING : "http://192.168.0.26:7070/api/v1/data/1/latest",
-}; 
-
-const myStorage = {
-    data: {},
-    needsSync: false,
+const serveNotification = (data) => {
+        showNotification(data);
 }
 
+/*** SERVICE WORKER EVENTS/API ***/
 
 
-async function  queryServer () {
-
-
-    fetch(SERVER_PATH.LOCALTESTING)
-    .then((response) => {
-        if (!response.ok) {
-            console.log("Response form server: ", response);
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then((data) => {
-
-
-        if (myStorage.data["recorded_at"] !== data["recorded_at"]) {
-           showNotification(data);
-
-            myStorage.data = data;
-        }
-        
-    })
-    .catch((error) => {
-        console.error("Error fetching data: ", error);
-    });
-}
-
-let stored_data;
-
-const getLastData = async () => {
-
-    return localStorage.data;
-
-    /*
-    console.log("Service worker: Fetching last data...");
-    const db = indexedDB.open("appdb", 3);
-    db.onsuccess = (event) => {
-        const database = event.target.result;
-        const transaction = database.transaction("plant", "readonly");
-        const store = transaction.objectStore("plant");
-        const request = store.openCursor(null, "prev");
-
-        request.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                stored_data = cursor.value;
-                cursor.continue();
+// used to check if the app can receive messages
+const isViewActive = () => {
+    if (port) {
+        console.log("Service worker: Checking app view!");
+        port.postMessage({type: 'is view active', payload: null});
+        setTimeout(() => {
+            if (!storageSW.needsSync) {
+                serveNotification(storageSW.data);
             }
-        }
-
-        request.onerror = (event) => {
-            console.error("Error fetching data: ", event.target.error);
-        }
-    }*/
+        }, 100);
+    }
+    
 }
 
-const storeData = async (data) => {
-    console.log("Service Worker: Storing data...");
-    const db = indexedDB.open("appdb", 3);
-    db.onsuccess = (event) => {
-        console.log("something has changed")
-        const database = event.target.result;
-        const transaction = database.transaction("plant", "readwrite");
-        const store = transaction.objectStore("plant");
-        const request = store.put(data);
 
-        request.onsuccess = (event) => {
-            console.log("SW: Data added successfully: ", event.target.result);
+// listen for incoming messages from the client app
+self.addEventListener('message', (event) => {
+
+    // if a message is received from the client app that the app is open
+    // then set the appActive flag to true
+    if (event.data.type === 'view is active') {
+        console.log("Service worker: Confirmed view is active");
+        port = event.ports[0];
+        const result = updatePlantState(storageSW.data);
+        if (result) {
+            console.log('Plant data updated in EFS from SW');
         }
-
-        request.onerror = (event) => {
-            console.error("SW: Error adding data: ", event.target.error);
+        else {
+            console.log('Plant data not updated to EFS from SW');
         }
-    };
+    }
 
-    db.onerror = (event) => {
-        console.error("SW: Database error: ", event.target.error);
-    };
+    if (event.data.type === "connect") {
+        console.log("Service worker: Port connected");
+        port = event.ports[0];    
+    }
+        
+});
 
-    db.onupgradeneeded = (event) => {
-        const database = event.target.result;
-        const objectStore = database.createObjectStore("plant", { keyPath: "plant" });
-    };
-}
 
 // Listen for sync events
 self.addEventListener("sync", (event) => {
     if (event.tag === "syncNotifications") {
-        myStorage.needsSync = true;
+        storageSW.needsSync = true;
         event.waitUntil(() => {
-            if (myStorage.needsSync) {
-                showNotification(myStorage.data);
-                myStorage.needsSync = false;
+            if (storageSW.needsSync) {
+                showNotification(storageSW.data);
+                storageSW.needsSync = false;
             }
         });
     }
@@ -123,22 +90,19 @@ self.addEventListener("sync", (event) => {
 
 self.addEventListener("install", (event) => {
     // dont install until all resources are cached
-    event.waitUntil(addResoucesToCache(["/", "/index.html", "/main.js", "/style.css"]));
-/*
-    setInterval(() => {
-        //self.registration.showNotification("Checking for data update...");
-    }, 9000);
-*/  console.log("Service worker: Checking for data update...");
+   // event.waitUntil(/*addResoucesToCache(["/", "/index.html", "/main.js", "/style.css"])*/);
+
+    console.log("Service worker: Checking for data update...");
     setInterval(() => {
     
-        queryServer()
+        queryPlantDataServer(storageSW, isViewActive)
     }
     , 9000); // 2 minutes
 });
 
 self.addEventListener("activate", (event) => {
     setInterval(() => {
-        queryServer()
+        queryPlantDataServer(storageSW, isViewActive)
     }, 9000);
 
 });
@@ -151,6 +115,9 @@ const cacheFirst = async (request) => {
 
 // highjack fetch requests from client to server
 self.addEventListener("fetch", (event) => {
+    
+  
     console.log("fetch intercepted: ", event.request.url);
     event.respondWith(cacheFirst(event.request));
 });
+
