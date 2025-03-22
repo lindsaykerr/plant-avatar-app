@@ -10,41 +10,12 @@
   </head>
   <body>
     <div id="app"></div>
-    <button id="notify" onclick='notify()'>Notify me</button>
-    <script>
-      function notify() {
-        if ("Notification" in window) {
-          Notification.requestPermission().then((permission) => {
-            if (permission === "granted") {
-              new Notification("Granted", {
-                body: "You will be notified",
-              });
-            }
-          });
-        }
-      }
-    </script>
+    <button id="allow-notifications">Notify me</button>
+    <button id="allow-camera">Use Camera</button>
     <div id="test-worker"></div> 
     <script type="module" src="/src/scripts/inti-service-worker.js"></script>
-    <script type="module" src="/src/main.js"></script>   
-    <script type="module" defer>
-      if ("serviceWorker" in navigator) {
-        const result = navigator.serviceWorker.ready;
-        result.then((registration) => {    
-          const channel = new MessageChannel();
-          registration.active.postMessage({type: "connect", port: channel.port2}, [channel.port2]);
-
-          channel.port1.onmessage = (event) => {
-           
-            if (event.data.type === "is view active") { 
-              console.log("Sending view is active ");
-              registration.active.postMessage({type: "view is active", view: true});
-            }
-          };
-        
-    
-        });
-      }
+    <script type="module" defer src="/src/main.js"></script>   
+   
     </script> 
 
   </body>

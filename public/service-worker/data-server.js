@@ -35,7 +35,7 @@ const DS_QUERY_URI = {
  */
 const DEBUG_DS = true;
 
-async function  queryPlantDataServer (storage, isAppActiveCallback,) {
+async function  queryPlantDataServer (storage, dataChangeCallback=()=>{},) {
     DEBUG_DS ? console.log('Attempting to fetch data from the Plant Data Server (FPD): ') : () => {};
     fetch(DS_QUERY_URI.PLANT_DATA)
     .then((response) => {
@@ -53,7 +53,7 @@ async function  queryPlantDataServer (storage, isAppActiveCallback,) {
             DEBUG_DS ? console.log('Data is different. Syncing data with client app.') : () => {};
             storage.needsSync = true;
             storage.data = data;
-            isAppActiveCallback();
+            dataChangeCallback();
         }
 
         return data;

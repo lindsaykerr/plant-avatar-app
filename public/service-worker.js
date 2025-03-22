@@ -1,6 +1,11 @@
 
-importScripts('data-server.js');
-importScripts('efs.js');
+importScripts('service-worker/data-server.js');
+importScripts('service-worker/efs.js');
+
+
+// flag to show notifications
+let showNotifications = false;
+
 
 /*** STORAGE, VARIABLES and CACHING ***/
 console.log("Service worker: Starting...NOW");
@@ -19,8 +24,12 @@ const addResoucesToCache = async (resources) => {
 
 
 
+
 // this is only a placeholder for now
 const showNotification = (data) => {
+    if (!showNotifications) {
+        return;
+    }
     self.registration.showNotification("Data Updated!", {
         body: data.message || "New data available.",
         icon: "/images/notification-icon.png"
@@ -55,8 +64,12 @@ self.addEventListener('message', (event) => {
     // if a message is received from the client app that the app is open
     // then set the appActive flag to true
     if (event.data.type === 'view is active') {
+   
+        
         console.log("Service worker: Confirmed view is active");
-        port = event.ports[0];
+        showNotifications = false;
+        
+        /*
         const result = updatePlantState(storageSW.data);
         if (result) {
             console.log('Plant data updated in EFS from SW');
@@ -64,6 +77,7 @@ self.addEventListener('message', (event) => {
         else {
             console.log('Plant data not updated to EFS from SW');
         }
+        */
     }
 
     if (event.data.type === "connect") {
@@ -72,6 +86,33 @@ self.addEventListener('message', (event) => {
 
         console.log("Port: ", port);
         isViewActive();
+    }
+
+    if (event.data.type === "allow-notifications") {
+        console.log("Service worker will: Allow notifications");
+        if (event.data.payload) {
+            showNotifications = true;
+        }
+    }
+
+    if (event.data.type === "get-data-update") {
+        
+        console.log("Service worker: Getting Data from client");
+        if (Object.keys(storageSW.data).length === 0) {
+            queryPlantDataServer(storageSW).then((data) =>{
+                console.log("Payload Data after request:", storageSW.data)
+                port.postMessage({type: "get-data-update", payload: storageSW.data});
+            });
+        }
+        else {
+            console.log("Payload data without request:", storageSW.data)
+            port.postMessage({type: "get-data-update", payload: storageSW.data});
+        }
+    }
+
+    if (event.data.type === "request-stored-data") {
+        console.log("Service worker: Storing data from client");
+        storageSW.data = event.data.payload;
     }
         
 });
@@ -94,18 +135,23 @@ self.addEventListener("sync", (event) => {
 self.addEventListener("install", (event) => {
     // dont install until all resources are cached
    // event.waitUntil(/*addResoucesToCache(["/", "/index.html", "/main.js", "/style.css"])*/);
-
+    if (port) {
+        console.log("Service worker: Requesting stored data, if any, on the client");
+        port.postMessage({type: 'request-stored-data', payload: null});
+    }
+    
     console.log("Service worker: Checking for data update...");
     setInterval(() => {
     
-        queryPlantDataServer(storageSW, isViewActive)
+        queryPlantDataServer(storageSW)
     }
     , 9000); // 2 minutes
 });
 
 self.addEventListener("activate", (event) => {
+    
     setInterval(() => {
-        queryPlantDataServer(storageSW, isViewActive)
+        queryPlantDataServer(storageSW)
     }, 9000);
 
 });
