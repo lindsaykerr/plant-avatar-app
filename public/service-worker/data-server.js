@@ -35,34 +35,25 @@ const DS_QUERY_URI = {
  */
 const DEBUG_DS = true;
 
-async function  queryPlantDataServer (storage, dataChangeCallback=()=>{},) {
+async function  queryPlantDataServer () {
     DEBUG_DS ? console.log('Attempting to fetch data from the Plant Data Server (FPD): ') : () => {};
-    fetch(DS_QUERY_URI.PLANT_DATA)
+    return await fetch(DS_QUERY_URI.PLANT_DATA)
     .then((response) => {
         if (!response.ok) {
             DEBUG_DS ? console.log("FPD: Response form server: ", response) : () => {};
             throw new Error(`FPD: HTTP error! status: ${response.status}`);
         }
         return response.json();
-    })
-    .then((data) => {
-
-        DEBUG_DS ? console.log('Plant data was fetched from server') : () => {};
-
-        if (storage.data["recorded_at"] !== data["recorded_at"]) {
-            DEBUG_DS ? console.log('Data is different. Syncing data with client app.') : () => {};
-            storage.needsSync = true;
-            storage.data = data;
-            dataChangeCallback();
-        }
-
-        return data;
-        
-    })
-    .catch((error) => {
+    }).catch((error) => {
         console.error("FPD:Error fetching data: ", error);
 
         return null;
     });
 }
+
+function compareData(data1, data2) {
+    return JSON.stringify(data1) === JSON.stringify(data2);
+}
+
+
 

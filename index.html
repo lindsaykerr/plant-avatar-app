@@ -5,18 +5,54 @@
     <link rel="icon" type="image/svg+xml" href="/paac.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    
-    <title>Vite App</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,400,0,0&icon_names=more_vert" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+    </style>
+    <script type="module">
+      import '/src/style.css';
+    </script>
+           
+    <title>PAAC</title>
   </head>
   <body>
-    <div id="app"></div>
-    <button id="allow-notifications">Notify me</button>
-    <button id="allow-camera">Use Camera</button>
-    <div id="test-worker"></div> 
-    <script type="module" src="/src/scripts/inti-service-worker.js"></script>
-    <script type="module" defer src="/src/main.js"></script>   
-   
-    </script> 
-
+      <div id="innterface2D"><h1></h1>
+          <div id="hidden-menu"></div>
+          <div class="popup hide" id="self-report">
+              <div class="avatar">
+                  <div class="avatar-profile">
+                      <img src="fred-profile.png" alt="avatar-profile">
+                  </div>
+                  <div class="avatar-message">
+                      <h2 class="name">Fred:</h2>
+                      <p class="message">Water me, human!!!?</p>
+                  </div>
+              </div>
+              <section class="reply">
+                  <p>Reply</p>
+                  <div class="btn-group">
+                      <button class="reply-button shd-negative" id="btn-negative">No!</button>
+                      <button class="reply-button shd-positive" id="btn-positive">Will do</button>
+                      <button class="reply-button shd-neutral" id="btn-neutral">Later</button>
+                  </div>
+              </section>
+          </div>
+          <div id="inactive-ui">
+              <div class="other-avatars">
+                  <div class="avatar-thumb">
+                      <img src="anna.png" alt="avatar-profile">
+                      <p class="name">Anna</hp>
+                  </div>
+              </div>
+              <div id="notify" class="material-symbols-outlined">
+                  more_vert
+              </div>
+          </div>
+      </div>
+      <div id="view3D"></div>
+    
+    <script type="module" defer src="/src/main.js"></script>
+    <script type="module" defer src="/src/avatar/avatar.js"></script>
+    
   </body>
 </html>
