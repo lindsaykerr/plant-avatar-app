@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import {CameraRig} from './scene/camera.js';
 import { DirectionalLightRig } from './scene/lights/directional.js';
 import {AVATARSTATES, hasStateChanged, getCurrentState, setCurrentState} from './avatar_api.js';
+import {SCENARIOS, PrototypeController } from '../prototype-controller.js';
 
 
 // object that will hold the avatar actions
@@ -161,29 +162,45 @@ gui.hide();
     
     let sceneChange = true;
 
+    const screenSize = {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
+
     // Setup scene, camera, and renderer
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(52, window.innerWidth/ window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(52, screenSize.width/ screenSize.height, 0.1, 1000);
 
     
     const renderer = new THREE.WebGLRenderer({antialias: true});
   
     const view = document.getElementById('view3D');
     view.appendChild(renderer.domElement);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(screenSize.width, screenSize.height);
     renderer.setAnimationLoop(animate);
     renderer.setPixelRatio(window.devicePixelRatio);
     let clock = new THREE.Clock();
 
 
+    window.addEventListener('resize', () => {
+        screenSize.width = window.innerWidth;
+        screenSize.height = window.innerHeight;
+        camera.aspect = screenSize.width / screenSize.height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(screenSize.width, screenSize.height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio), 2);
+    });
+        
+
+
     function resizeRendererToDisplaySize(renderer) {
         const canvas = renderer.domElement;
         const pixelRatio = window.devicePixelRatio;
-        const width  = Math.floor( canvas.clientWidth  * pixelRatio );
-        const height = Math.floor( canvas.clientHeight * pixelRatio );
-        const needResize = canvas.width !== width || canvas.height !== height;
+        screenSize.width  = Math.floor( canvas.clientWidth  * pixelRatio );
+        screenSize.height = Math.floor( canvas.clientHeight * pixelRatio );
+        const needResize = canvas.width !== screenSize.width|| canvas.height !== screenSize.height;
         if (needResize) {
-            renderer.setSize(width, height, false);
+            renderer.setSize(screenSize.width, screenSize.height, false);
         }
         return needResize;
     }
@@ -193,7 +210,11 @@ gui.hide();
         protoOptions.add({show: false}, 'show').name('Show Avatar').onChange((value) => {
         }); */
 
-    protoOptions.add({scenario: 'needs water'}, 'scenario', ['needs water', 'ideal']).name('Scenario').onChange((value) => {
+    let scenario = 'ideal';
+
+    protoOptions.add(SCENARIOS, 'LIVE', ['NEED_WATER', 'LIVE', "CLEAR"]).name('Scenario').onChange((value) => {
+        console.log("PROTO option debug:",value);
+        PrototypeController.scenario(SCENARIOS[value]);
         //prototypeControler.scenario(value);    
     });
     protoOptions.add({allow: false}, 'allow').name('Allow Notifications').onChange((value) => {
@@ -211,6 +232,8 @@ gui.hide();
             postToSerivceWorker({type: 'allow-notifications', payload: true});
         } 
     });
+
+
 
 
 
@@ -321,6 +344,12 @@ gui.hide();
 
         }, 
         (loading) => {
+            console.log("Loading...");
+            setTimeout(() => {
+                const loadScreen = document.getElementById('loading-screen');
+                loadScreen.style.animation = 'fade-out .5s forwards';
+                loadScreen.style.visibility = 'hidden';
+            }, 2000);
 
         }, 
         (error) => {

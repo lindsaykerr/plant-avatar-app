@@ -7,6 +7,27 @@ import { RegServiceWorker } from './ws/setup-service-worker.js';
 
 
 
+let viewClosed = false;
+let viewWasInactive = false;
+
+
+function getViewWasInactive() {
+    return viewWasInactive;
+}
+
+function setViewWasInactive(value) {
+    viewWasInactive = value;
+}
+
+function checkViewWasInactive() {
+    if (viewClosed) {
+        viewWasInactive = true;
+        viewClosed = false;
+    }
+}
+
+const notifySound = new Audio('/audio/notify-sound.ogg');
+notifySound.preload = 'auto';
 
 function checkMoistureParams(data, previousData) {
     console.log("Assigning moisture parameters");
@@ -39,7 +60,7 @@ function checkMoistureParams(data, previousData) {
     }
     else if (currentMoisture == idealMoisture) {
         console.log("Mositure levels are ideal");
-        state = AVATARSTATES.happy_v2;
+        state = AVATARSTATES.happy;
     }
     else if (currentMoisture < maxMoisture && currentMoisture > minMoisture) {
         if (prevMoisture < currentMoisture) {
@@ -159,6 +180,15 @@ async function swAppIntegration() {
         }
         */
 
+        setInterval(() => {
+            try {
+                postManager.registration.active.postMessage({type: 'connect'}, [postManager.channel.port2]);
+                console.log("New connection established");
+            }   catch (error) {
+                console.log("Connection already established");
+            }
+        }, 3000);
+
         postManager.channel.port1.onmessage = (event) => {
                     // listen for messages from the service worker
     
@@ -207,13 +237,18 @@ async function swAppIntegration() {
 window.addEventListener("visibilitychange", e => {
     if (document.hidden) {
         console.log("Client: View is inactive");
-        postManager.channel.port2.close();
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.style.visibility = 'visible';
+        viewClosed = true;
         postToSerivceWorker({type: 'view is inactive'});
     }
     else {
-        console.log("Client: View is active");
-        postManager.channel.port2.start();
-        postToSerivceWorker({type: 'view is active'});
+        checkViewWasInactive();
+        setTimeout(() => {
+            const loadScreen = document.getElementById('loading-screen');
+            loadScreen.style.animation = 'fade-out .5s forwards';
+            loadScreen.style.visibility = 'hidden';
+        }, 1000);
     }
 });
 
@@ -265,4 +300,4 @@ window.addEventListener("visibilitychange", e => {
 */
 
 
-export {postToSerivceWorker};
+export {postToSerivceWorker, checkMoistureParams, getViewWasInactive, setViewWasInactive, notifySound};

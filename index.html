@@ -16,7 +16,17 @@
     <title>PAAC</title>
   </head>
   <body>
-      <div id="innterface2D"><h1></h1>
+      <div id="innterface2D">
+        <div id="loading-screen">
+            <div class="content">
+                <div class="branding">
+                    <img src="paac.svg" alt="PAAC">
+                    <h1>PAAC</h1>
+                    <small>Plant Avatar Affective Computing</small>
+                </div>
+                <div class="loading-message"><h2>Loading...</h2></div>
+            </div>
+        </div>
           <div id="hidden-menu"></div>
           <div class="popup hide" id="self-report">
               <div class="avatar">
@@ -31,9 +41,9 @@
               <section class="reply">
                   <p>Reply</p>
                   <div class="btn-group">
-                      <button class="reply-button shd-negative" id="btn-negative">No!</button>
-                      <button class="reply-button shd-positive" id="btn-positive">Will do</button>
-                      <button class="reply-button shd-neutral" id="btn-neutral">Later</button>
+                      <button class="reply-button shd-negative" id="btn-negative" data-valence="negative">No!</button>
+                      <button class="reply-button shd-positive" id="btn-positive" data-valence="positive">Will do</button>
+                      <button class="reply-button shd-neutral" id="btn-neutral" data-valence="neutral">Later</button>
                   </div>
               </section>
           </div>
