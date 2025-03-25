@@ -163,12 +163,32 @@ window.addEventListener('load', e => {
 
 });
 
+let heartbeatId;    
+
+function heartbeat() {
+        if (postManager && postManager.registration.active) {
+            heartbeatId = setInterval(() => {
+                //console.log("Client: Sending heartbeat to service worker");
+                postManager.registration.active.postMessage({type: 'heartbeat'});
+            }, 10000);
+        }
+    }
+
+function killHeartbeat() {
+    clearInterval(heartbeatId);
+}
+    
+
 async function swAppIntegration() {
+
+
 
     await RegServiceWorker().catch(error => {
         console.log("Client: Failed to register service worker", error);
     });
     await openSWChannel().then(result => {
+
+
 
         
 
@@ -190,9 +210,20 @@ async function swAppIntegration() {
         }, 3000);
         */
 
+       
+
         postManager.channel.port1.onmessage = (event) => {
                     // listen for messages from the service worker
-    
+
+            if (event.data.type === "heartbeat response") {
+                console.log("Heartbeating...");
+            }
+
+            if (event.data.type === "request port") {
+                postManager.registration.active.postMessage({type: 'connect'}, [postManager.channel.port2]);
+                console.log("Client: Connection established");
+            }
+            
     
             if (event.data.type === "is view active") { 
                 console.log("Client: Sending view is active ");
@@ -226,18 +257,23 @@ async function swAppIntegration() {
                     console.log('Client: Sending data to service worker');
                     postToSerivceWorker({type: 'get-data-update', payload: JSON.parse(data)});
                 }
-            }
-        }
+            } 
+        
+        }    
+        heartbeat();
     }).catch(error => {
         console.log("Client: Failed to open communicaion channel service worker")
     });
 }
 
 
-
+window.addEventListener('beforeunload', () => {
+    killHeartbeat();
+});
 
 window.addEventListener("visibilitychange", e => {
     if (document.hidden) {
+        
         console.log("Client: View is inactive");
         const loadingScreen = document.getElementById('loading-screen');
         loadingScreen.style.visibility = 'visible';

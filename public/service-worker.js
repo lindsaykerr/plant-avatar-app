@@ -171,7 +171,7 @@ const storageSW = {
     notification: {
         next_notification: null,
         interval: 5000,
-        interval_increment: 30000,
+        interval_increment: 10000,
         max_attempts: 3,
         attempts: 0,
         type: ""
@@ -200,12 +200,32 @@ self.addEventListener('message', (event) => {
         // update port after inactivity
        
     }
+
+    if (event.data.type === "heartbeat") {
+       // console.log("SW: Heartbeat received");
+        try {
+            port.postMessage({type: "heartbeat response"});
+        }
+        catch (error) {
+            console.log("SW - Lost port will request a renewal");
+            try {
+                self.clients.matchAll().then((clientList) => {
+                    for (let client of clientList) {
+                        client.postMessage({type: "request port"});
+                    }
+                });
+            }
+            catch (error) {
+                console.error("Service worker: Error sending heartbeat response: ", error);
+            }
+        }
+    }
           
 
     if (event.data.type === "connect") {
         port = event.ports[0];
         port.start();
-        console.log("Service worker: Port connected");
+        console.log("SW: Port connected");
         Notifications.show = false;
         
 
@@ -318,7 +338,7 @@ async function loadPlantData() {
         else {
             console.log("Service worker: No port connection");
         }
-    }, 3000);
+    }, 5000);
 }
 
 loadPlantData();
