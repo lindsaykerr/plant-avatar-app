@@ -179,7 +179,7 @@ async function swAppIntegration() {
             postToSerivceWorker({type: 'get-data-update'});
         }
         */
-
+        /*
         setInterval(() => {
             try {
                 postManager.registration.active.postMessage({type: 'connect'}, [postManager.channel.port2]);
@@ -188,6 +188,7 @@ async function swAppIntegration() {
                 console.log("Connection already established");
             }
         }, 3000);
+        */
 
         postManager.channel.port1.onmessage = (event) => {
                     // listen for messages from the service worker
@@ -211,6 +212,7 @@ async function swAppIntegration() {
                 if (previousData == null || (tempData.reading !== previousData.reading)) {
                     checkMoistureParams(tempData, previousData);
                 }
+                postManager.registration.active.postMessage({type: 'view is active'});
             }
                
             if (event.data.type === "request-stored-data") {
@@ -244,11 +246,16 @@ window.addEventListener("visibilitychange", e => {
     }
     else {
         checkViewWasInactive();
-        setTimeout(() => {
-            const loadScreen = document.getElementById('loading-screen');
-            loadScreen.style.animation = 'fade-out .5s forwards';
-            loadScreen.style.visibility = 'hidden';
-        }, 1000);
+        if (viewWasInactive) {
+            setTimeout(() => {
+                const loadScreen = document.getElementById('loading-screen');
+                loadScreen.style.animation = 'fade-out .5s forwards';
+                loadScreen.style.visibility = 'hidden';
+            }, 1000);
+            postToSerivceWorker({type: 'view is active'});
+        }
+
+  
     }
 });
 

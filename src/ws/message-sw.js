@@ -8,9 +8,10 @@ async function openSWChannel() {
     return await navigator.serviceWorker.ready.then((registration) => {
         console.log("Creating a channel to SW:");
         
+        /*
         // register the sync event
         registration.sync.register('syncNotifications');
-
+        */
         // create a message channel
         const channel = new MessageChannel();
 

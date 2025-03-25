@@ -4,7 +4,7 @@ importScripts('service-worker/efs.js');
 
 class WSNotification {
     constructor(notificationObj) {
-        this.interval = notificationObj.interval ?? 1000;
+        this.interval_start = notificationObj.interval ?? 1000;
         this.interval_increment = notificationObj.interval_increment ?? 10000;
         this.max_attempts = notificationObj.max_attempts ?? 3;
         this.attempts = notificationObj.attempts ?? 0;
@@ -28,13 +28,14 @@ class WSNotification {
     }
     buildList() {
         if (this.sendDateTime != null && this.type !== "" && this.title !== "" && this.messages.length > 0) {
+            const notifydate = this.sendDateTime + this.interval_start
             if (this.list.length == 0) {
                 for (let i = 0; i < this.max_attempts; i++) {
                     this.list.push({
                         type: this.type,
                         title: this.title,
                         message: this.messages[i],
-                        sendDateTime: this.sendDateTime + (this.interval * i),
+                        sendDateTime: notifydate + (this.interval_increment * i),
                     });
                 }
             }
@@ -89,9 +90,7 @@ class Notifications {
         if (Notifications.currentNotification != null) {
             return false;
         }
-        if (Notifications.lastReading == reading) {
-            return false;
-        }
+
         return (reading <= min_moisture || reading >= max_moisture);
         
     }
@@ -130,22 +129,23 @@ class Notifications {
 
             wsNotificationList.forEach((notification) => {
                 console.log("SW Notification time difference (ms): ", notification);
-                setTimeout(() => {
+                const id = setTimeout(() => {
                     if (Notifications.canSend()) {
                         Notifications.#showNotification(notification);
                     }
                     else {
                         Notifications.currentNotification = null;
                     }
-                }, notification.startSendTime - Date.now());
+                    //console.log("Notification sent times: ", notification.sendDateTime);
+                }, notification.sendDateTime - Date.now());
+
             });
-            Notifications.show = false;
+           
             
     }
 
     static #showNotification = (notificationItem) => {
        
-
     
         self.registration.showNotification(`${notificationItem.title}`, {
             
@@ -182,11 +182,10 @@ const isTempStorageEmpty = () => {
     return Object.keys(storageSW.data).length === 0;
 };
 
-
+let client;
 
 
 /*** SERVICE WORKER EVENTS/API ***/
-
 
 // listen for incoming messages from the client app
 self.addEventListener('message', (event) => {
@@ -194,7 +193,7 @@ self.addEventListener('message', (event) => {
     // if a message is received from the client app that the app is open
     // then set the appActive flag to true
     if (event.data.type === 'view is active') {
-        port = event.ports[0];
+        
         console.log("Service worker: View is active");
         Notifications.show = false;
         Notifications.currentNotification = null;
@@ -204,15 +203,18 @@ self.addEventListener('message', (event) => {
           
 
     if (event.data.type === "connect") {
+        port = event.ports[0];
+        port.start();
         console.log("Service worker: Port connected");
         Notifications.show = false;
+        
 
-        port = event.ports[0];    
+         
 
         
-        if (isTempStorageEmpty) {
+        if (isTempStorageEmpty()) {
             console.log("Service worker: Checking stored data on the client");
-            port.postMessage({type: 'request-stored-data', payload: null});
+            port.postMessage({type: 'request-stored-data'});
         }
         
     }
@@ -246,6 +248,7 @@ self.addEventListener('message', (event) => {
                             Notifications.buildNotificationData(result, storageSW.notification)
                         );
                     }
+                    console.log("SW - Result: ", result, "Storage: ", storageSW);
                     if (storageSW.data.reading !== result.reading) {
                         port.postMessage({type: "get-data-update", payload: result});
                         storageSW.data = result;
@@ -277,6 +280,7 @@ self.addEventListener('message', (event) => {
 
 
 // Listen for sync events
+/*
 self.addEventListener("sync", (event) => {
     if (event.tag === "syncNotifications") {
         storageSW.needsSync = true;
@@ -287,9 +291,41 @@ self.addEventListener("sync", (event) => {
         });
     }
 });
+*/
 
 
-self.addEventListener("install", (event) => {});
+async function loadPlantData() {
+    setInterval(() => {
+        if (port) {
+            queryPlantDataServer()
+            .then((result)=>{
+                console.log("SW - notification: ", Notifications.permissions, Notifications.show);
+                if (Notifications.canSend() && Notifications.canNotify(result)) {
+                    Notifications.send(
+                        Notifications.buildNotificationData(result, storageSW.notification)
+                    );
+                }
+                
+
+                if (storageSW.data.reading !== result.reading) {
+                    port.postMessage({type: "get-data-update", payload: result});
+                    storageSW.data = result;
+                }
+            }).catch((error) => {
+                console.error("Service worker: Error getting data from server: ", error);
+            });
+        }
+        else {
+            console.log("Service worker: No port connection");
+        }
+    }, 3000);
+}
+
+loadPlantData();
+
+self.addEventListener("install", (event) => {
+    //loadPlantData();
+});
 
 self.addEventListener("fetch", (event) => {
     console.log("Service worker: Fetch event: ", event);
@@ -299,24 +335,51 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("activate", (event) => {
     
+    
+    //loadPlantData();
+    /*
+
+    let tempData = {};
+    const intervalQuery = async () => {      
+        const tempData = {};      
+
+        setInterval(() => {
+
+            queryPlantDataServer()
+            .then((result)=>{
+                tempData = result;
+            }).catch((error) => {
+                console.error("Service worker: Error getting data from server: ", error);
+            });
+     
+ 
+        }, 3000);
+    
+    };
+    event.waitUntil(intervalQuery);
+
     setInterval(() => {
-        queryPlantDataServer()
-        .then((result)=>{
+        if (port) {
+            port.postMessage({type: "view is active"});    
             console.log("SW - notification: ", Notifications.permissions, Notifications.show);
             if (Notifications.canSend() && Notifications.canNotify(result)) {
                 Notifications.send(
                     Notifications.buildNotificationData(result, storageSW.notification)
                 );
             }
-            if (storageSW.data.reading !== result.reading) {
+            
+
+            if (storageSW.data.reading !== tempData.reading) {
                 port.postMessage({type: "get-data-update", payload: result});
                 storageSW.data = result;
             }
-        }).catch((error) => {
-            console.error("Service worker: Error getting data from server: ", error);
         }
-        );
+        else {
+            console.log("Service worker: No port connection");
+        }
     }, 3000);
+
+    */
 
 });
 

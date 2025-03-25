@@ -1,5 +1,5 @@
 import { BASE_SERVER_URL, RESOURCE,getREQUEST_URI, postREQUEST_URI } from "./config.js";
-import { checkMoistureParams, setViewWasInactive, getViewWasInactive, notifySound } from "./main.js";
+import {postToSerivceWorker, checkMoistureParams, setViewWasInactive, getViewWasInactive, notifySound } from "./main.js";
 import {AVATARSTATES, hasStateChanged, setCurrentState, getCurrentState} from './avatar/avatar_api.js';
 
 const SCENARIOS = {
@@ -132,6 +132,7 @@ class PrototypeController {
         localStorage.setItem('prev_plants_data', JSON.stringify({}));
         localStorage.setItem('plants_data', JSON.stringify({}));
         setCurrentState(AVATARSTATES.idle);
+        
       }
 
 

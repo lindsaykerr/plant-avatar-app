@@ -36,6 +36,7 @@ const DS_QUERY_URI = {
 const DEBUG_DS = true;
 
 async function  queryPlantDataServer () {
+    
     DEBUG_DS ? console.log('Attempting to fetch data from the Plant Data Server (FPD): ') : () => {};
     return await fetch(DS_QUERY_URI.PLANT_DATA)
     .then((response) => {
