@@ -8,6 +8,7 @@ const SCENARIOS = {
   CLEAR: 'clear',
 };
 
+const base_server = BASE_SERVER_URL.LOCALTESTING;
 
 class PrototypeController {
 
@@ -32,7 +33,7 @@ class PrototypeController {
         // END 
         // 
         console.log("Scenario - NEED_WATER: Attempting to send false sensor data to the server, to simulate the plant needing water");
-        fetch(postREQUEST_URI(BASE_SERVER_URL.LOCALTESTING, RESOURCE.POST_PLANT_DATA), {
+        fetch(postREQUEST_URI(base_server, RESOURCE.POST_PLANT_DATA), {
 
           method: 'POST',
           headers: {
@@ -51,7 +52,7 @@ class PrototypeController {
         }).then(()=>{
             console.log("Scenario - NEED_WATER: Attempting to fetch plant data from the server");
 
-            fetch(getREQUEST_URI(BASE_SERVER_URL.LOCALTESTING, RESOURCE.GET_PLANT_DATA)).then((response) => {
+            fetch(getREQUEST_URI(base_server, RESOURCE.GET_PLANT_DATA)).then((response) => {
               if (!response.ok) {
                   console.log('ENR: Response from server: ', response);
                   throw new Error(`ENR: HTTP error! status: ${response.status}`);

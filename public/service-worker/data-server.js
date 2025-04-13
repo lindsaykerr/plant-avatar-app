@@ -9,7 +9,7 @@
 /*** SERVER_URL Settings ***/
 const DS_BASE_SERVER_URL = {
     LOCALTESTING: 'http://localhost:7070/api/v1',
-    TESTING: 'http://192.168.0.26:7070/api/v1',
+    TESTING: 'https://devlab.linzk.net/plant-server/api/v1',
 };
 
 const DS_SERVER_URL = DS_BASE_SERVER_URL.LOCALTESTING;

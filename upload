@@ -2,7 +2,7 @@
 
 npm run build
 
-failure=flase
+failure=false
 
 ssh ubuntu@devlab.io "rm -rf /var/www/html/bar/*"
 if [ $? -eq 0 ]; then
