@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 
 import {AVATARSTATES, getCurrentState, setCurrentState} from './avatar/avatar_api.js';
 

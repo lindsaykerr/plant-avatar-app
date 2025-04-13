@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 
 function fetchData() {
     fetch('http://127.0.0.1:7070/api/v1/data/1/latest') // Replace '/api/data' with your actual API endpoint

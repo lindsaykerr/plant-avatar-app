@@ -1,4 +1,6 @@
-
+/**
+ * Author: Lindsay C Kerr
+ */
 async function openSWChannel() {
 
   

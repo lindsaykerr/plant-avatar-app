@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 const AVATARSTATES = {
     happy: 'happy',
     angry: 'angry',

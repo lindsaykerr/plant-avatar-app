@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 import * as dat from 'lil-gui'
 import * as THREE from 'three';
 

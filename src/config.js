@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 const DEBUG_EFS = true;
 
 const BASE_SERVER_URL = {

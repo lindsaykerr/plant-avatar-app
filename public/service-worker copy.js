@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 importScripts('service-worker/data-server.js');
 importScripts('service-worker/efs.js');
 

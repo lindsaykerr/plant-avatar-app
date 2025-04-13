@@ -1,3 +1,6 @@
+/**
+ * Author: Lindsay C Kerr
+ */
 import { BASE_SERVER_URL, RESOURCE,getREQUEST_URI, postREQUEST_URI } from "./config.js";
 import {postToSerivceWorker, checkMoistureParams, setViewWasInactive, getViewWasInactive, notifySound } from "./main.js";
 import {AVATARSTATES, hasStateChanged, setCurrentState, getCurrentState} from './avatar/avatar_api.js';
