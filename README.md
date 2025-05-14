@@ -21,3 +21,5 @@ Maximise the browser, a popup dialogue should appear, which is a user valence se
 
 ### Mimicking remote sensor change
 Animations can be triggered by making a json POST request {"value": int[1-10] } eg {"value": 4} to the plant-data-server which can also be run locally. Request using POSTMAN or SoupUI can be made to http://127.0.0.1:7070/api/v1/submit
+
+## end
